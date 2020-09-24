@@ -20,7 +20,7 @@ by Pacman agents (in searchAgents.py).
 
 import util
 
-
+# testing git
 class SearchProblem:
     """
     This class outlines the structure of a search problem, but doesn't implement
