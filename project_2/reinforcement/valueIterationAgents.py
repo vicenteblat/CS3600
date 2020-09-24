@@ -40,7 +40,7 @@ class ValueIterationAgent(ValueEstimationAgent):
         for a given number of iterations using the supplied
         discount factor.
     """
-    def __init__(self, mdp, discount = 0.9, iterations = 100):
+    def __init__(self, mdp: mdp.MarkovDecisionProcess, discount = 0.9, iterations = 100):
         """
           Your value iteration agent should take an mdp on
           construction, run the indicated number of iterations
@@ -56,13 +56,36 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.mdp = mdp
         self.discount = discount
         self.iterations = iterations
-        self.values = util.Counter() # A Counter is a dict with default 0
+        self.values = util.Counter()      # A Counter is a dict with default 0
+        self.valuesNext = util.Counter()  # Counter of values (utilities) for next iteration
         self.runValueIteration()
 
     def runValueIteration(self):
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
+        # Initialize utilities for every state in S to 0.0, except for the terminal state
+        # which is initialized to its reward
+        # VALUES ARE INITIALIZED WHEN COUNTERS ARE INITIALIZED
 
+        # Repeat process for given number of iterations
+        while self.iterations > 0:
+            # For each state, update its utility using the Bellman eqn
+            for state in self.mdp.getStates():
+                sumList = []
+                for action in self.mdp.getPossibleActions(state):
+                    actionSum = 0
+                    for possibleAction in self.mdp.getTransitionStatesAndProbs(state, action):
+                        nextState = possibleAction[0]
+                        nextStateUtility = self.values[nextState]
+                        probability = possibleAction[1]
+                        actionSum += probability * nextStateUtility
+                    sumList.append(actionSum)
+                if self.mdp.isTerminal(state):
+                    self.valuesNext[state] = self.mdp.getReward(state, None, None)
+                else:
+                    self.valuesNext[state] = self.mdp.getReward(state, None, None) + self.discount * max(sumList)
+            self.values = self.valuesNext
+            self.iterations -= 1
 
     def getValue(self, state):
         """
@@ -89,7 +112,27 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        if self.mdp.isTerminal(state):
+            return None
+        else:
+            bestAction = None
+            highestValue = 0
+            nextState = None
+            for action in self.mdp.getPossibleActions(state):
+                if action == 'north':
+                    nextState = (state[0], state[1] + 1)
+                elif action == 'south':
+                    nextState = (state[0], state[1] - 1)
+                elif action == 'east':
+                    nextState = (state[0] + 1, state[1])
+                elif action == 'west':
+                    nextState = (state[0] - 1, state[1])
+
+                nextStateValue = self.values[nextState]
+                if nextStateValue > highestValue:
+                    highestValue = nextStateValue
+                    bestAction = action
+            return bestAction
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
