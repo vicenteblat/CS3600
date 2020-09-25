@@ -26,7 +26,7 @@
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
 
-import mdp, util
+import mdp, util, math, copy
 
 from learningAgents import ValueEstimationAgent
 import collections
@@ -60,6 +60,7 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.valuesNext = util.Counter()  # Counter of values (utilities) for next iteration
         self.runValueIteration()
 
+
     def runValueIteration(self):
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
@@ -68,24 +69,17 @@ class ValueIterationAgent(ValueEstimationAgent):
         # VALUES ARE INITIALIZED WHEN COUNTERS ARE INITIALIZED
 
         # Repeat process for given number of iterations
-        while self.iterations > 0:
-            # For each state, update its utility using the Bellman eqn
+        for i in range(self.iterations):
+            # For each state, update its utility using the computed Q value
             for state in self.mdp.getStates():
-                sumList = []
+                QList = []
                 for action in self.mdp.getPossibleActions(state):
-                    actionSum = 0
-                    for possibleAction in self.mdp.getTransitionStatesAndProbs(state, action):
-                        nextState = possibleAction[0]
-                        nextStateUtility = self.values[nextState]
-                        probability = possibleAction[1]
-                        actionSum += probability * nextStateUtility
-                    sumList.append(actionSum)
+                    QList.append(self.computeQValueFromValues(state, action))
                 if self.mdp.isTerminal(state):
                     self.valuesNext[state] = self.mdp.getReward(state, None, None)
                 else:
-                    self.valuesNext[state] = self.mdp.getReward(state, None, None) + self.discount * max(sumList)
-            self.values = self.valuesNext
-            self.iterations -= 1
+                    self.valuesNext[state] = max(QList)
+            self.values = copy.copy(self.valuesNext)
 
     def getValue(self, state):
         """
@@ -100,7 +94,14 @@ class ValueIterationAgent(ValueEstimationAgent):
           value function stored in self.values.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        actionSum = 0
+        for transition in self.mdp.getTransitionStatesAndProbs(state, action):
+            nextState = transition[0]
+            nextStateUtility = self.values[nextState]
+            probability = transition[1]
+            actionSum += probability * nextStateUtility
+        QValue = self.mdp.getReward(state, None, None) + self.discount * actionSum
+        return QValue
 
     def computeActionFromValues(self, state):
         """
@@ -113,26 +114,15 @@ class ValueIterationAgent(ValueEstimationAgent):
         """
         "*** YOUR CODE HERE ***"
         if self.mdp.isTerminal(state):
-            return None
+            return
         else:
-            bestAction = None
-            highestValue = 0
-            nextState = None
+            maxValue = -math.inf
+            policy = None
             for action in self.mdp.getPossibleActions(state):
-                if action == 'north':
-                    nextState = (state[0], state[1] + 1)
-                elif action == 'south':
-                    nextState = (state[0], state[1] - 1)
-                elif action == 'east':
-                    nextState = (state[0] + 1, state[1])
-                elif action == 'west':
-                    nextState = (state[0] - 1, state[1])
-
-                nextStateValue = self.values[nextState]
-                if nextStateValue > highestValue:
-                    highestValue = nextStateValue
-                    bestAction = action
-            return bestAction
+                if self.computeQValueFromValues(state, action) > maxValue:
+                    policy = action
+                    maxValue = self.computeQValueFromValues(state, action)
+            return policy
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
