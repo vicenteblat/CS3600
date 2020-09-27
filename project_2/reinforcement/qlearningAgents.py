@@ -16,7 +16,7 @@ from game import *
 from learningAgents import ReinforcementAgent
 from featureExtractors import *
 
-import random,util,math
+import random, util, math
 
 class QLearningAgent(ReinforcementAgent):
     """
@@ -64,12 +64,12 @@ class QLearningAgent(ReinforcementAgent):
           terminal state, you should return a value of 0.0.
         """
         "*** YOUR CODE HERE ***"
-        maxQ = 0.0
+        maxQ = -math.inf
         for legalAction in self.getLegalActions(state):
             QValue = self.getQValue(state, legalAction)
             if QValue > maxQ:
                 maxQ = QValue
-        return maxQ
+        return maxQ if maxQ != -math.inf else 0.0
 
 
     def computeActionFromQValues(self, state):
@@ -79,19 +79,17 @@ class QLearningAgent(ReinforcementAgent):
           you should return None.
         """
         "*** YOUR CODE HERE ***"
-        action = None
-        actionHolder = None
+        tiedActions = []
         maxQ = -math.inf
         for legalAction in self.getLegalActions(state):
             QValue = self.getQValue(state, legalAction)
             if QValue == maxQ:
-                actionHolder = legalAction
-                action = random.choice([actionHolder, action])
+                tiedActions.append(legalAction)
             elif QValue > maxQ:
-                actionHolder = legalAction
                 maxQ = QValue
-                action = actionHolder
-        return action
+                tiedActions = [legalAction]
+        return random.choice(tiedActions) if tiedActions else None
+
 
     def getAction(self, state):
         """
