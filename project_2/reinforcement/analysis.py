@@ -63,7 +63,8 @@ def question3e():
 def question6():
     answerEpsilon = 0.3
     answerLearningRate = 0.6
-    return answerEpsilon, answerLearningRate
+    # return answerEpsilon, answerLearningRate
+    return 'NOT POSSIBLE'
     # If not possible, return 'NOT POSSIBLE'
 
 if __name__ == '__main__':
