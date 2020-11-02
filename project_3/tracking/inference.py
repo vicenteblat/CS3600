@@ -293,10 +293,21 @@ class ExactInference(InferenceModule):
         position is known.
         """
         "*** YOUR CODE HERE ***"
+        # Get noisy reading from sonar and current pacman position from method arguments
+        noisyDistance = observation
+        pacmanPosition = gameState.getPacmanPosition()
+        # Create temporary counter
+        tempBeliefs = util.Counter()
+        # Loop through every possible ghost position
+        for ghostPosition in self.allPositions:
+            # For each, calculate P(noisy distance | true distance)
+            positionProb = self.getObservationProb(noisyDistance, pacmanPosition, ghostPosition, self.getJailPosition())
+            # Calculate P_i(ghost in position c) = P(noisy distance | true distance) * P_i-1(ghost in position c)
+            tempBeliefs[ghostPosition] = positionProb * self.beliefs[ghostPosition]
+        # Normalize beliefs and assign it back to beliefs counter
+        tempBeliefs.normalize()
+        self.beliefs = tempBeliefs.copy()
 
-
-        self.beliefs.normalize()
-        raiseNotDefined()
 
     def elapseTime(self, gameState):
         """
