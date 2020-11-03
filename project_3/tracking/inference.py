@@ -5,6 +5,7 @@ import game
 
 from util import manhattanDistance, raiseNotDefined
 import util
+import math
 
 class DiscreteDistribution(dict):
     """
@@ -371,11 +372,24 @@ class ParticleFilter(InferenceModule):
         """
         self.particles = []
         "*** YOUR CODE HERE ***"
+        # Get number of particles, and possible values of particles (legal positions)
+        N = self.numParticles
+        positions = self.legalPositions
+        # Calculate uniform distribution of particles across legal positions (floored in case of decimals)
+        lenPositions = len(positions)
+        n = math.floor(N / lenPositions)
+        # Add legal positions n number of times
+        for pos in positions:
+            for i in range(n):
+                self.particles.append(pos)
 
+        # Calculate number of missing particles (in case of non integer division)
+        lenParticles = len(self.particles)
+        difference = N - lenParticles
+        # Add remaining particles
+        for j in range(difference):
+            self.particles.append(positions[j])
 
-
-
-        raiseNotDefined()
 
     def observeUpdate(self, observation, gameState):
         """
@@ -395,17 +409,24 @@ class ParticleFilter(InferenceModule):
         You should again use the function self.getObservationProb to find the probability of an observation
         given Pacman’s position, a potential ghost position, and the jail position.
         The sample method of the DiscreteDistribution class will also be useful.
-        As a reminder, you can obtain Pacman’s position using gameState.getPacmanPosition(), and the jail position using self.getJailPosition()
-
-
+        As a reminder, you can obtain Pacman’s position using gameState.getPacmanPosition(), and the jail position
+        using self.getJailPosition()
         """
         "*** YOUR CODE HERE ***"
-
         tmp = DiscreteDistribution()
+        pacmanPosition = gameState.getPacmanPosition()
+        for particle in self.particles:
+            particleProb = self.getObservationProb(observation, pacmanPosition, particle, self.getJailPosition())
+            tmp[particle] += particleProb
+        tmpParticles = []
+        if tmp.total() == 0:
+            self.initializeUniformly(gameState)
+        else:
+            for i in range(self.numParticles):
+                tmpParticles.append(tmp.sample())
+            self.particles = tmpParticles.copy()
 
 
-
-        #raiseNotDefined()
 
     def elapseTime(self, gameState):
         """
@@ -422,10 +443,6 @@ class ParticleFilter(InferenceModule):
 
         """
         "*** YOUR CODE HERE ***"
-
-
-
-
         raiseNotDefined()
 
     def getBeliefDistribution(self):
@@ -437,11 +454,11 @@ class ParticleFilter(InferenceModule):
         This function should return a normalized distribution.
         """
         "*** YOUR CODE HERE ***"
-
-
-
-        raiseNotDefined()
-
+        tmp = DiscreteDistribution()
+        for particle in self.particles:
+            tmp[particle] += 1
+        tmp.normalize()
+        return tmp
 
 class JointParticleFilter(ParticleFilter):
     """
