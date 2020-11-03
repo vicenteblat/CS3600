@@ -18,6 +18,7 @@ from game import Directions
 from keyboardAgents import KeyboardAgent
 import inference
 import busters
+import math
 
 class NullGraphics:
     "Placeholder for graphics"
@@ -167,5 +168,30 @@ class GreedyBustersAgent(BustersAgent):
             [beliefs for i, beliefs in enumerate(self.ghostBeliefs)
              if livingGhosts[i+1]]
         "*** YOUR CODE HERE ***"
+        # List to store the most probable position of remaining living ghosts
+        ghostPositionsList = []
+        # Loop through each living ghost's position probability distribution
+        for positionDistribution in livingGhostPositionDistributions:
+            # Get most probable ghost position
+            ghostPosition = positionDistribution.argMax()
+            # Append ghost position to list
+            ghostPositionsList.append(ghostPosition)
 
-        util.raiseNotDefined()
+        # Choose the action that minimizes the distance (cost) to the nearest ghost
+        cost = math.inf
+        costAction = None
+        # Loop through Pacman's possible actions
+        for action in legal:
+            # Get resulting position after possible action
+            successorPosition = Actions.getSuccessor(pacmanPosition, action)
+            # Loop through each ghost position
+            for ghostPosition in ghostPositionsList:
+                # Find the cost or distance between the resulting Pacman position and a ghost in ghost list
+                currentCost = self.distancer.getDistance(ghostPosition, successorPosition)
+                # Determine if last legal action taken minimizes the current cost
+                if currentCost < cost:
+                    # Update minimum cost and action that minimized it
+                    costAction = action
+                    cost = currentCost
+        # Return the action that minimized the cost or distance to the nearest ghost
+        return costAction

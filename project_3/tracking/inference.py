@@ -304,7 +304,7 @@ class ExactInference(InferenceModule):
             positionProb = self.getObservationProb(noisyDistance, pacmanPosition, ghostPosition, self.getJailPosition())
             # Calculate P_i(ghost in position c) = P(noisy distance | true distance) * P_i-1(ghost in position c)
             tempBeliefs[ghostPosition] = positionProb * self.beliefs[ghostPosition]
-        # Normalize beliefs and assign it back to beliefs counter
+        # Normalize temp beliefs and assign it back to beliefs counter
         tempBeliefs.normalize()
         self.beliefs = tempBeliefs.copy()
 
@@ -324,19 +324,27 @@ class ExactInference(InferenceModule):
         newPosDist = self.getPositionDistribution(gameState, oldPos)
 
         Where oldPos refers to the previous ghost position.
-        newPosDist is a DiscreteDistribution object, where for each position p in self.allPositions, newPosDist[p] is the probability
-        that the ghost is at position p at time t + 1, given that the ghost is at position oldPos at time t
-
+        newPosDist is a DiscreteDistribution object, where for each position p in self.allPositions, newPosDist[p] is
+        the probability that the ghost is at position p at time t + 1, given that the ghost is at position oldPos
+        at time t
         """
         "*** YOUR CODE HERE ***"
-
-
-
-
-        self.beliefs.normalize()
-
-
-        raiseNotDefined()
+        # Get current pacman position from method argument
+        pacmanPosition = gameState.getPacmanPosition()
+        # Create temporary counter
+        tempBeliefs = util.Counter()
+        # Loop through every possible ghost position
+        for oldPos in self.allPositions:
+            # Get position distribution of ghost possible new locations at time t+1
+            newPosDist = self.getPositionDistribution(gameState, oldPos)
+            # Loop through all new possible locations
+            for newPos in newPosDist:
+                # Iteratively update probability of new ghost position with eqn:
+                # P_t+1(G = d) = SUM{P_t(c) * P(c -> d)}
+                tempBeliefs[newPos] += self.beliefs[oldPos] * newPosDist[newPos]
+        # Normalize temp beliefs and assign it back to beliefs counter
+        tempBeliefs.normalize()
+        self.beliefs = tempBeliefs.copy()
 
     def getBeliefDistribution(self):
         return self.beliefs
