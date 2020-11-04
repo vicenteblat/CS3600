@@ -415,14 +415,19 @@ class ParticleFilter(InferenceModule):
         "*** YOUR CODE HERE ***"
         tmp = DiscreteDistribution()
         pacmanPosition = gameState.getPacmanPosition()
+        # Loop through every particle
         for particle in self.particles:
+            # For each particle, calculate its probability given the observation
             particleProb = self.getObservationProb(observation, pacmanPosition, particle, self.getJailPosition())
+            # Update probability of particle in discrete distribution object
             tmp[particle] += particleProb
         tmpParticles = []
         if tmp.total() == 0:
             self.initializeUniformly(gameState)
         else:
+            # Loop through particles
             for i in range(self.numParticles):
+                # Re sample each particle given the new calculate weights
                 tmpParticles.append(tmp.sample())
             self.particles = tmpParticles.copy()
 
@@ -439,11 +444,20 @@ class ParticleFilter(InferenceModule):
 
         This line of code obtains the distribution over new positions for the ghost, given its previous position (oldPos).
         The sample method of the DiscreteDistribution class will also be useful.
-
-
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        # Holder for new particles
+        tmpParticles = []
+        # Loop through current particles
+        for particle in self.particles:
+            # Calculate probability distribution of new states that can be reached from current particle
+            newPosDist = self.getPositionDistribution(gameState, particle)
+            # Initialize discrete distribution object with new probability distribution
+            tmp = DiscreteDistribution(newPosDist)
+            # Sample new particle from discrete distribution
+            tmpParticles.append(tmp.sample())
+        # Update particles
+        self.particles = tmpParticles.copy()
 
     def getBeliefDistribution(self):
         """
@@ -529,11 +543,6 @@ class JointParticleFilter(ParticleFilter):
 
         """
         "*** YOUR CODE HERE ***"
-
-
-
-
-
         raiseNotDefined()
 
     def elapseTime(self, gameState):
