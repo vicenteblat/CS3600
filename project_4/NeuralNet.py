@@ -9,9 +9,9 @@ class Perceptron(object):
     Class to represent a single Perceptron in the net.
     """
     def __init__(self, inSize=1, weights=None):
-        self.inSize = inSize+1#number of perceptrons feeding into this one; add one for bias
+        self.inSize = inSize+1  # number of perceptrons feeding into this one; add one for bias
         if weights is None:
-            #weights of previous layers into this one, random if passed in as None
+            # weights of previous layers into this one, random if passed in as None
             self.weights = [1.0]*self.inSize
             self.setRandomWeights()
         else:
@@ -40,8 +40,8 @@ class Perceptron(object):
             The output of the sigmoid function parametrized by 
             the value.
         """
-        """YOUR CODE"""
-      
+        return 1 / (1 + exp(-value))
+
     def sigmoidActivation(self, inActs):                                       
         """
         Returns the activation value of this Perceptron with the given input.
@@ -54,7 +54,10 @@ class Perceptron(object):
             float
             The value of the sigmoid of the weighted input
         """
-        """YOUR CODE"""
+        inPut = inActs.copy()
+        inPut.insert(0, 1)
+        weighted = self.getWeightedSum(inPut)
+        return self.sigmoid(weighted)
         
     def sigmoidDeriv(self, value):
         """
@@ -127,24 +130,24 @@ class NeuralNet(object):
         Args:
             layerSize (list<int>): the number of perceptrons in each layer 
         """
-        self.layerSize = layerSize #Holds number of inputs and percepetrons in each layer
+        self.layerSize = layerSize  # Holds number of inputs and perceptrons in each layer
         self.outputLayer = []
         self.numHiddenLayers = len(layerSize)-2
         self.hiddenLayers = [[] for x in range(self.numHiddenLayers)]
-        self.numLayers =  self.numHiddenLayers+1
+        self.numLayers = self.numHiddenLayers+1
         
-        #build hidden layer(s)        
+        # build hidden layer(s)
         for h in range(self.numHiddenLayers):
             for p in range(layerSize[h+1]):
-                percep = Perceptron(layerSize[h]) # num of perceps feeding into this one
+                percep = Perceptron(layerSize[h])  # num of perceps feeding into this one
                 self.hiddenLayers[h].append(percep)
  
-        #build output layer
+        # build output layer
         for i in range(layerSize[-1]):
-            percep = Perceptron(layerSize[-2]) # num of perceps feeding into this one
+            percep = Perceptron(layerSize[-2])  # num of perceps feeding into this one
             self.outputLayer.append(percep)
             
-        #build layers list that holds all layers in order - use this structure
+        # build layers list that holds all layers in order - use this structure
         # to implement back propagation
         self.layers = [self.hiddenLayers[h] for h in range(self.numHiddenLayers)] + [self.outputLayer]
   
@@ -172,7 +175,21 @@ class NeuralNet(object):
             A list of lists. The first list is the input list, and the others are
             lists of the output values of all perceptrons in each layer.
         """
-        """YOUR CODE"""
+        outputList = [inActs]
+
+        for h in range(self.numHiddenLayers):
+            layerList = []
+            for perceptron in self.hiddenLayers[h]:
+                layerList.append(perceptron.sigmoidActivation(outputList[h]))
+            outputList.append(layerList)
+
+        layerList = []
+        for perceptron in self.outputLayer:
+            layerList.append(perceptron.sigmoidActivation(outputList[-1]))
+        outputList.append(layerList)
+
+        return outputList
+
     
     def backPropLearning(self, examples, alpha):
         """
