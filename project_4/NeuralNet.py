@@ -299,7 +299,7 @@ def buildNeuralNet(examples, alpha=0.1, weightChangeThreshold = 0.00008,hiddenLa
        once the weight modification reached the threshold, or the iteration 
        exceeds the maximum iteration.
     """
-    examplesTrain,examplesTest = examples       
+    examplesTrain, examplesTest = examples
     numIn = len(examplesTrain[0][0])
     numOut = len(examplesTest[0][1])     
     time = datetime.now().time()
@@ -310,39 +310,57 @@ def buildNeuralNet(examples, alpha=0.1, weightChangeThreshold = 0.00008,hiddenLa
     layerList = [numIn]+hiddenLayerList+[numOut]
     nnet = NeuralNet(layerList)                                                    
     if startNNet is not None:
-        nnet =startNNet
+        nnet = startNNet
     """
     YOUR CODE
     """
-    iteration=0
-    trainError=0
-    weightMod=0
+    iteration = 0
+    avgError = 0
+    avgWeightChange = 0
     
     """
     Iterate for as long as it takes to reach weight modification threshold
     """
-        #if iteration%10==0:
-        #    print '! on iteration %d; training error %f and weight change %f'%(iteration,trainError,weightMod)
-        #else :
-        #    print '.',
-        
-          
+    for i in range(maxItr):
+        for example in examplesTrain:
+            _ = nnet.feedForward(example[0])
+        avgError, avgWeightChange = nnet.backPropLearning(examplesTrain, alpha)
+        iteration += 1
+        if avgWeightChange <= weightChangeThreshold:
+            break
+
+        if iteration % 10 == 0:
+            print('! on iteration %d; training error %f and weight change %f' % (iteration, avgError, avgWeightChange))
+        else:
+            print('.', end=' ')
+
     time = datetime.now().time()
-    print ('Finished after %d iterations at time %s with training error %f and weight change %f'%(iteration,str(time),trainError,weightMod))
+    print('Finished after %d iterations at time %s with training error %f and weight change %f' % (iteration, str(time), avgError, avgWeightChange))
                 
     """
     Get the accuracy of your Neural Network on the test examples.
 	For each text example, you should first feedforward to get the NN outputs. Then, round the list of outputs from the output layer of the neural net.
-	If the entire rounded list from the NN matches with the known list from the test example, then add to testCorrect, else add to  testError.
+	If the entire rounded list from the NN matches with the known list from the test example, then add to testCorrect, else add to testError.
     """ 
     
     testError = 0
     testCorrect = 0     
     
-    testAccuracy=0#num correct/num total
+    testAccuracy = 0  # num correct/num total
+
+    for example in examplesTest:
+        output = nnet.feedForward(example[0])[-1]
+        rounded = [round(num) for num in output]
+        if rounded == example[1]:
+            testCorrect += 1
+        else:
+            testError += 1
+
+    testAccuracy = testCorrect / len(examplesTest)
     
-    print('Feed Forward Test correctly classified %d, incorrectly classified %d, test accuracy %f\n'%(testCorrect,testError,testAccuracy))
+    print('Feed Forward Test correctly classified %d, incorrectly classified %d, test accuracy %f\n' % (testCorrect, testError, testAccuracy))
     
     """return something"""
-
+    result = (nnet, testAccuracy)
+    return result
 
