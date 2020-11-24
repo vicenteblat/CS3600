@@ -4,6 +4,7 @@ from datetime import datetime
 from math import exp
 from random import random, randint, choice
 
+
 class Perceptron(object):
     """
     Class to represent a single Perceptron in the net.
@@ -128,6 +129,7 @@ class Perceptron(object):
         outStr += 'Node input weights %s\n'%str(self.weights)
         return outStr
 
+
 class NeuralNet(object):                                    
     """
     Class to hold the net of perceptrons and implement functions for it.
@@ -218,40 +220,43 @@ class NeuralNet(object):
            averageWeightChange is the summed absolute weight change of all perceptrons, 
            divided by the sum of their input sizes (the average weight change for a single perceptron).
         """
-        #keep track of output
+        # keep track of output
         averageError = 0
         averageWeightChange = 0
         numWeights = 0
         
-        for example in examples:#for each example
-            #keep track of deltas to use in weight change
+        for example in examples:  # for each example
+            # keep track of deltas to use in weight change
             deltas = []
-            #Neural net output list
-            allLayerOutput = """FILL IN - neural net output list computation"""
+            # Neural net output list
+            allLayerOutput = self.feedForward(example[0])
             lastLayerOutput = allLayerOutput[-1]
-            #Empty output layer delta list
+            # Empty output layer delta list
             outDelta = []
-            #iterate through all output layer neurons
+            # iterate through all output layer neurons
             for outputNum in range(len(example[1])):
-                gPrime = self.outputLayer[outputNum].sigmoidActivationDeriv("""FILL IN""")
-                error = """FILL IN - error for this neuron"""
-                delta = """FILL IN - delta for this neuron"""
-                averageError+=error*error/2
+                gPrime = self.outputLayer[outputNum].sigmoidActivationDeriv(allLayerOutput[-2])
+                error = example[1][outputNum] - lastLayerOutput[outputNum]
+                delta = gPrime * error
+                averageError += error * (error/2)
                 outDelta.append(delta)
             deltas.append(outDelta)
-            
             """
             Backpropagate through all hidden layers, calculating and storing
             the deltas for each perceptron layer.
             """
-            for layerNum in range(self.numHiddenLayers-1,-1,-1):
+            for layerNum in range(self.numHiddenLayers-1, -1, -1):
                 layer = self.layers[layerNum]
                 nextLayer = self.layers[layerNum+1]
                 hiddenDelta = []
-                #Iterate through all neurons in this layer
+                # Iterate through all neurons in this layer
                 for neuronNum in range(len(layer)):
-                    gPrime = layer[neuronNum].sigmoidActivationDeriv("""FILL IN""")
-                    delta = """FILL IN - delta for this neuron
+                    gPrime = layer[neuronNum].sigmoidActivationDeriv(allLayerOutput[layerNum])
+                    error = 0
+                    for nextNeuronNum in range(len(nextLayer)):
+                        error += (nextLayer[nextNeuronNum].weights[neuronNum+1] * deltas[0][nextNeuronNum])
+                    delta = gPrime * error
+                    """FILL IN - delta for this neuron
                                Carefully look at the equation here,
                                 it is easy to do this by intuition incorrectly"""
                     hiddenDelta.append(delta)
@@ -261,15 +266,15 @@ class NeuralNet(object):
             Having aggregated all deltas, update the weights of the 
             hidden and output layers accordingly.
             """      
-            for numLayer in range(0,self.numLayers):
+            for numLayer in range(0, self.numLayers):
                 layer = self.layers[numLayer]
                 for numNeuron in range(len(layer)):
-                    weightMod = layer[numNeuron].updateWeights("""FILL IN""")
+                    weightMod = layer[numNeuron].updateWeights(allLayerOutput[numLayer], alpha, deltas[numLayer][numNeuron])
                     averageWeightChange += weightMod
                     numWeights += layer[numNeuron].inSize
-            #end for each example
-        #calculate final output
-        averageError /= (len(examples)*len(examples[0][1]))             #number of examples x length of output vector
+            # end for each example
+        # calculate final output
+        averageError /= (len(examples)*len(examples[0][1]))             # number of examples x length of output vector
         averageWeightChange/=(numWeights)
         return averageError, averageWeightChange
     
