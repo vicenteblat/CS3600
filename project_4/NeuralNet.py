@@ -3,6 +3,7 @@ import sys
 from datetime import datetime
 from math import exp
 from random import random, randint, choice
+import timeit
 
 
 class Perceptron(object):
@@ -322,12 +323,15 @@ def buildNeuralNet(examples, alpha=0.1, weightChangeThreshold = 0.00008,hiddenLa
     Iterate for as long as it takes to reach weight modification threshold
     """
     for i in range(maxItr):
+        start = timeit.default_timer()
         for example in examplesTrain:
             _ = nnet.feedForward(example[0])
         avgError, avgWeightChange = nnet.backPropLearning(examplesTrain, alpha)
         iteration += 1
         if avgWeightChange <= weightChangeThreshold:
             break
+        print('Seconds taken for iteration {}: {}s'.format(i, timeit.default_timer()- start))
+
 
         if iteration % 10 == 0:
             print('! on iteration %d; training error %f and weight change %f' % (iteration, avgError, avgWeightChange))
